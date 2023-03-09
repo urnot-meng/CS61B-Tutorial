@@ -115,29 +115,45 @@ public class Model extends Observable {
         // changed local variable to true.
         board.setViewingPerspective(side);
         for (int col = 0; col < board.size(); col += 1) {
-            boolean[] merged = {false, false, false};
+            // a boolean array to indicate if the row is merged before
+            // row 3 is merged[2], row 2 is merged[1], row 1 is merged[0]
+            boolean[] merged = new boolean[3];
             for (int row = 2; row >= 0; row -= 1) {
                 Tile t = board.tile(col, row);
+                // skip the null tile
                 if (t == null) {
                     continue;
                 }
+                // Compare the current row with rows above it
+                // in a downwards direction, starting from row 3
                 int targetRow = 3;
                 while (targetRow > row) {
-                    if (board.tile(col, targetRow) == null) {
+                    Tile target = board.tile(col, targetRow);
+                    // target is null, can move current tile to its position
+                    if (target == null) {
                         board.move(col, targetRow, t);
                         changed = true;
+                        // jump out the while loop
                         break;
-                    }else if (board.tile(col, targetRow).value() == t.value() && !merged[targetRow - 1]) {
+                    // target value is equal to current tile's value
+                    // and target row is not merged before
+                    }else if (target.value() == t.value()
+                            && !merged[targetRow - 1]) {
+                        // a not null tile exists
+                        // between current row and target row
+                        // cannot merge, jump to next target row
                         if ( targetRow - row > 1 &&
                                 board.tile(col, targetRow-1) != null) {
                             continue;
                         }
-                        board.move(col, targetRow, t);
-                        merged[targetRow - 1] = true;
+                        // update target row's merged boolean value
+                        merged[targetRow - 1] = board.move(col, targetRow, t);
+                        // update score
                         score += board.tile(col, targetRow).value();
                         changed = true;
                         break;
                     }
+                    // update target row
                     targetRow -= 1;
                 }
             }
